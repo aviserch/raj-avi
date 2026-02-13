@@ -95,7 +95,9 @@ function App() {
   const goBackToPuzzle = () => {
     setPuzzleSolved(false);
     setEnvelopeStage(0);
-    setOrder(shuffle(CORRECT_ORDER));
+    const newOrder = shuffle(CORRECT_ORDER);
+    orderRef.current = newOrder;
+    setOrder(newOrder);
   };
 
   const onPuzzleDragStart = (e, slotIndex) => {
@@ -117,10 +119,12 @@ function App() {
       setDragSlot(null);
       return;
     }
+    const fromSlot = dragSlot;
     setOrder((prev) => {
       const next = [...prev];
-      next[dragSlot] = prev[targetSlot];
-      next[targetSlot] = prev[dragSlot];
+      next[fromSlot] = prev[targetSlot];
+      next[targetSlot] = prev[fromSlot];
+      orderRef.current = next;
       return next;
     });
     setDragSlot(null);
@@ -132,7 +136,14 @@ function App() {
 
   const onDoneClick = () => {
     const currentOrder = orderRef.current;
-    const correct = currentOrder.length === 9 && currentOrder.every((piece, slotIndex) => Number(piece) === CORRECT_ORDER[slotIndex]);
+    if (!currentOrder || currentOrder.length !== 9) {
+      setDoneFeedback('Not quite! Keep trying.');
+      return;
+    }
+    const correct = currentOrder.every((piece, slotIndex) => {
+      const p = Number(piece);
+      return p === slotIndex;
+    });
     if (correct) {
       setPuzzleSolved(true);
       setDoneFeedback(null);
